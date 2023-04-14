@@ -53,7 +53,7 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
         # title:
         "Password Reset for {title}".format(title="Purchase App"),
         # message:
-        "Some one requested for password reset, please click link to reset password. " "http://127.0.0.1:8000%s"%email_plaintext_message,
+        "Some one requested for password reset, please click link to reset password. " "https://dailypurchase-app.herokuapp.com%s"%email_plaintext_message,
         # from:
         "noreply@blackwood.com.hk",
         # to:
