@@ -202,13 +202,11 @@ SIMPLE_JWT = {
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_USE_TLS = False
-EMAIL_HOST = 'mail.blackwood.com.hk'
-EMAIL_HOST_USER = 'noreply@blackwood.com.hk'
-EMAIL_HOST_PASSWORD = '6hGGH];MV38j'
+# EMAIL_USE_TLS = False
+EMAIL_HOST = env("EMAIL_HOST")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
 # EMAIL_PORT = 587
-DEFAULT_FROM_EMAIL = 'Blackwood Website <noreply@blackwood.com.hk>'
-
-
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL"),
