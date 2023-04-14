@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-m=l0kcc2+nmsv)6gwu7s1rhaqe48h(12$!bc#iem9kw2dtrbht
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -207,4 +207,4 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER"),
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD"),
 EMAIL_PORT = 587
 EMAIL_USE_TLS = False
-DEFAULT_FROM_EMAIL = 'Purchase App <noreply@blackwood.com.hk>'
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL"),
