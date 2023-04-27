@@ -1,4 +1,8 @@
 from rest_framework import serializers;
+from rest_framework.serializers import(
+     CharField,
+     Serializer,
+     )
 from .models import (Category,Dailypurchase,Payment,Supplier)
 from .models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -60,14 +64,7 @@ class CategorySerializer(serializers.ModelSerializer):
         model=Category
         fields="__all__"
 
-class DailypurchaseSerializer(serializers.ModelSerializer):
-    suppliers= serializers.ReadOnlyField(source='suppliers.name')
-    category= serializers.ReadOnlyField(source='category.name')
-    payment= serializers.ReadOnlyField(source='payment.name')
-    class Meta:
-        model=Dailypurchase
-        fields="__all__"
-        
+
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model=Payment
@@ -75,7 +72,40 @@ class PaymentSerializer(serializers.ModelSerializer):
         
 
 class SupplierSerializer(serializers.ModelSerializer):
+    category_name= serializers.ReadOnlyField(source='category.name')
+
     class Meta:
         model=Supplier
         fields="__all__"
-        
+
+
+class DailypurchaseSerializer(serializers.ModelSerializer):
+    suppliers= serializers.CharField(source='suppliers.name')
+    category= serializers.CharField(source='category.name')
+    payment= serializers.CharField(source='payment.name')
+    class Meta:
+        model=Dailypurchase
+        fields="__all__"
+
+    def create(self, validated_data):
+        mydict={}
+        myfields=['suppliers','category','payment']
+
+        for e in myfields: 
+            mydict[e]=validated_data.pop(e)['name']
+
+
+        '''
+        Serialising foreign keys suppliers
+        '''
+        suppliers_data=Supplier.objects.filter(name=mydict["suppliers"])
+        category_data=Category.objects.filter(name=mydict["category"])
+        payment_data=Payment.objects.filter(name=mydict["payment"])
+        updatedMydict={'suppliers':suppliers_data[0],'category':category_data[0],'payment':payment_data[0]}
+        '''
+        Serialising foreign keys category
+        '''
+        validated_data.update(updatedMydict)
+        # print(validated_data)
+        return Dailypurchase.objects.create(**validated_data)
+      

@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.hashers import make_password
 from rest_framework import generics
+from django.http.response import JsonResponse
 
 
 
@@ -147,14 +148,16 @@ class DailypurchaseListView(APIView):
     def get(self, request,format=None):
         model=Dailypurchase.objects.filter(user=request.user)
         serializer=DailypurchaseSerializer(model, many=True)
+        # print(serializer.data)
         return Response(serializer.data)
     
+ 
     def post(self,request,format=None):
-         serializer=DailypurchaseSerializer(data=request.data)
-         if serializer.is_valid():
+        serializer=DailypurchaseSerializer(data=request.data)
+        if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class DailypurchaseDetailView(APIView):
