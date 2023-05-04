@@ -12,7 +12,7 @@ class PaymentAdmin(admin.ModelAdmin):
 admin.site.register(Payment, PaymentAdmin)
 
 class SupplierAdmin(admin.ModelAdmin):
-    list_display=('user','name', 'category')
+    list_display=('user','name')
     list_filter = ('user',)
 admin.site.register(Supplier, SupplierAdmin)
 
