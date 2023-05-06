@@ -106,6 +106,37 @@ class DailypurchaseSerializer(serializers.ModelSerializer):
         Serialising foreign keys category
         '''
         validated_data.update(updatedMydict)
-        # print(validated_data)
         return Dailypurchase.objects.create(**validated_data)
       
+    
+    def update(self, instance, validated_data):
+        '''
+        Updating foreign keys category
+        '''
+        instance.date = validated_data.get('date', instance.date)
+        instance.amount = validated_data.get('amount', instance.amount)
+        instance.purchase = validated_data.get('purchase', instance.purchase)
+
+        # Get the supplier instance
+        suppliers_data=validated_data.pop("suppliers")
+        supplier=Supplier.objects.get(name=suppliers_data["name"],user=instance.user)
+        # Update the dailypurchase instance with the supplier instance
+        instance.suppliers = supplier
+
+        # Get the category instance
+        category_data=validated_data.pop("category")
+        category=Category.objects.get(name=category_data["name"],user=instance.user)
+        # Update the dailypurchase instance with the supplier instance
+        instance.category = category
+
+        # Get the category instance
+        payment_data=validated_data.pop("payment")
+        print(payment_data["name"])
+        payment=Payment.objects.get(name=payment_data["name"], user=instance.user)
+        # Update the dailypurchase instance with the supplier instance
+        instance.payment = payment
+
+        instance.save()
+        return instance
+      
+    
