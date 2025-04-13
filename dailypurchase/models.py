@@ -17,18 +17,19 @@ class Payment(models.Model):
 class Supplier(models.Model):
     user=models.ForeignKey(User, on_delete=models.CASCADE )
     name=models.CharField(max_length=100)
+    category=models.ForeignKey(Category, on_delete=models.DO_NOTHING, null=True)
     def __str__(self):
     	return self.name
 
 # Create your models here.
 class Dailypurchase(models.Model):
-    user=models.ForeignKey(User, on_delete=models.SET_NULL, null=True  )
+    user=models.ForeignKey(User, on_delete=models.DO_NOTHING, null=True  )
     date=models.DateField()
-    suppliers=models.ForeignKey(Supplier, on_delete=models.SET_NULL, null=True)
+    suppliers=models.ForeignKey(Supplier, on_delete=models.DO_NOTHING, null=True)
     purchase=models.CharField(max_length=100)
-    category=models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    category=models.ForeignKey(Category, on_delete=models.DO_NOTHING, null=True)
     amount=models.FloatField()
-    payment=models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True)
+    payment=models.ForeignKey(Payment, on_delete=models.DO_NOTHING, null=True)
     def __str__(self):
         	return self.purchase
 

@@ -24,7 +24,7 @@ class UserSerializerWithToken(UserSerializer):
     token=serializers.SerializerMethodField(read_only=True)
     class Meta:
         model=User
-        fields=["id","username","email", "token"]
+        fields=["id","username","email", "token", "is_staff"]
     
     def get_token(self, obj):
         token=RefreshToken.for_user(obj)
@@ -72,11 +72,11 @@ class PaymentSerializer(serializers.ModelSerializer):
         
 
 class SupplierSerializer(serializers.ModelSerializer):
-    category_name= serializers.ReadOnlyField(source='category.name')
+    category_name= serializers.CharField(source='category.name', read_only=True)
 
     class Meta:
         model=Supplier
-        fields="__all__"
+        fields = ['id', 'user','name', 'category','category_name']
 
 
 class DailypurchaseSerializer(serializers.ModelSerializer):

@@ -31,10 +31,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-m=l0kcc2+nmsv)6gwu7s1rhaqe48h(12$!bc#iem9kw2dtrbht'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True # False in production
 APPEND_SLASH=False
 CORS_ORIGIN_ALLOW_ALL = True
-
+USE_L10N=True
 ALLOWED_HOSTS = ['*']
 
 # Application definition
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django_rest_passwordreset',
     'rest_framework_simplejwt',
     'dailypurchase.apps.DailypurchaseConfig',
+    'payroll.apps.PayrollConfig',
 ]
 
 MIDDLEWARE = [
@@ -99,12 +100,14 @@ WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        # 'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'mysql.connector.django',
         'NAME':env("DB_NAME"),
         'USER':env("DB_USER"),
         'PASSWORD':env("DB_PASSWORD"),
         'HOST':env("DB_HOST"),
-        'PORT':"3306",
+        # 'PORT':"3306",Server
+        'PORT':env("DB_PORT"),#localhost
         'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 
@@ -134,6 +137,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 2,
 }
 
 SIMPLE_JWT = {
@@ -155,7 +160,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL='static/'
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field

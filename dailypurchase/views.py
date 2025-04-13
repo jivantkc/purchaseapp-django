@@ -1,4 +1,5 @@
 from .models import *
+from payroll.models import *
 from .serializers import (CategorySerializer,
                           DailypurchaseSerializer,
                           PaymentSerializer,
@@ -18,8 +19,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.hashers import make_password
 from rest_framework import generics
 from django.http.response import JsonResponse
-
-
+from rest_framework.pagination import PageNumberPagination
+from django.core.paginator import Paginator
+from django.utils import timezone
+from rest_framework.response import Response
+from django.db.models import Sum, Q
 
 """
 Authentication Token Generator"""
@@ -106,7 +110,11 @@ class CategoryListView(APIView):
         serializer=CategorySerializer(category, many=True)
         return Response(serializer.data)
     
+       
+        
+    
     def post(self,request,format=None):
+         request.data['user'] = request.user.id
          serializer=CategorySerializer(data=request.data)
          if serializer.is_valid():
                 serializer.save()
@@ -162,6 +170,7 @@ class PaymentListView(APIView):
         return Response(serializer.data)
     
     def post(self,request,format=None):
+         request.data['user'] = request.user.id
          serializer=PaymentSerializer(data=request.data)
          if serializer.is_valid():
                 serializer.save()
@@ -220,6 +229,8 @@ class SupplierListView(APIView):
         return Response(serializer.data)
     
     def post(self,request,format=None):
+         request.data['user'] = request.user.id
+        #  user=self.request.user
          serializer=SupplierSerializer(data=request.data)
          if serializer.is_valid():
                 serializer.save()
@@ -247,6 +258,17 @@ class SupplierDetailView(APIView):
                  return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def patch(self, request, pk, format=None):
+        transformer = self.get_object(pk)
+        serializer = SupplierSerializer(transformer,
+                                           data=request.data,
+                                           partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+          
+    
 
     def delete(self, request, pk, format=None):
             model=self.get_object(pk)
@@ -254,22 +276,76 @@ class SupplierDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 2
+    page_size_query_param = 'page'
+    max_page_size = 10
+
 
 class DailypurchaseListView(APIView):
     permission_classes = (IsAuthenticated,)
+
     def get(self, request,format=None):
-        model=Dailypurchase.objects.filter(user=request.user)
-        serializer=DailypurchaseSerializer(model, many=True)
-        # print(serializer.data)
-        return Response(serializer.data)
+        now = timezone.now()
+        first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Calculate last day of month
+        if now.month == 12:
+            last_day = now.replace(year=now.year+1, month=1, day=1)
+        else:
+            last_day = now.replace(month=now.month+1, day=1)
+        last_day = last_day - timezone.timedelta(days=1)
+
+        queryset = Dailypurchase.objects.filter(user=request.user, date__range=[first_day, last_day]).order_by('-id')
+        
+        # print(queryset)
+
+        #get data for dashboard
+        # Group by category and annotate
+        # Group by category and annotate
+        dashboard = queryset.values(
+            'category__name'
+        ).annotate(
+            
+            # total_quantity=Sum('quantity'),
+            total=Sum('amount')
+        ).order_by('-total')
+        
+        
+        # Get pagination parameters from request
+        page = request.GET.get('page', 1)
+        per_page = request.GET.get('per_page', 3)
+    
+        paginator = Paginator(queryset, per_page)
+        page_obj = paginator.get_page(page)
+    
+        serializer=DailypurchaseSerializer(page_obj, many=True)
+         
+    
+        return Response({
+        'data': serializer.data,
+        'dashboard':dashboard,
+        'total': paginator.count,
+        'page': page_obj.number,
+        'per_page': int(per_page),
+        'total_pages': paginator.num_pages,
+        })
+
     
  
     def post(self,request,format=None):
-        serializer=DailypurchaseSerializer(data=request.data)
+        # Add the authenticated user to the request data
+        request.data['user'] = request.user.id  # Ensure the user is associated with the purchase
+        # print("Received!", request.data)
+
+        # Validate and save the data
+        serializer = DailypurchaseSerializer(data=request.data)
         if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # Handle validation errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class DailypurchaseDetailView(APIView):
@@ -314,3 +390,65 @@ class DailypurchaseDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+
+class DashboardsListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request,format=None):
+        now = timezone.now()
+        first_day = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # Calculate last day of month
+        if now.month == 12:
+            last_day = now.replace(year=now.year+1, month=1, day=1)
+        else:
+            last_day = now.replace(month=now.month+1, day=1)
+        last_day = last_day - timezone.timedelta(days=1)
+
+        queryset1 = Dailypurchase.objects.filter(user=request.user, date__range=[first_day, last_day]).order_by('-id')
+        queryset2 = FixedExpense.objects.filter(user=request.user, date__range=[first_day, last_day]).order_by('-id')
+        
+        # print(queryset)
+
+        #get data for dashboard
+        # Group by category and annotate
+        # Group by category and annotate
+        dashboard1 = queryset1.values(
+            'category__name'
+        ).annotate(
+            
+            # total_quantity=Sum('quantity'),
+            total=Sum('amount')
+        ).order_by('-total')
+
+        dashboard2 = queryset2.values(
+            'category__name'
+        ).annotate(
+            
+            # total_quantity=Sum('quantity'),
+            total=Sum('amount')
+        ).order_by('-total')
+        
+        dashboard = [*dashboard1, *dashboard2]
+        dashboard = sorted(dashboard, key=lambda x: x['total'], reverse=True)
+        
+        return Response({
+        'data': dashboard,
+        })
+
+    
+ 
+    def post(self,request,format=None):
+        # Add the authenticated user to the request data
+        request.data['user'] = request.user.id  # Ensure the user is associated with the purchase
+        # print("Received!", request.data)
+
+        # Validate and save the data
+        serializer = DailypurchaseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # Handle validation errors
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    

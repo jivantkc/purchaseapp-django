@@ -15,9 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+ 
 
 urlpatterns = [
     path('api/', include("dailypurchase.urls.urls_dailypurchase")),
-    path('api/user/', include("dailypurchase.urls.urls_user")),
+    path('api/auth/', include("dailypurchase.urls.urls_user")),
+    path('api/payroll/', include("payroll.urls")),
+    path('api/', include("dailypurchase.urls.urls_dashboards")),
     path('admin/', admin.site.urls),
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

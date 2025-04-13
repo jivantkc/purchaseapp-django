@@ -1,2 +1,5 @@
 db.sqlite3
 api/.env
+mydb.sqlite3
+static/admin
+static/rest_framework
